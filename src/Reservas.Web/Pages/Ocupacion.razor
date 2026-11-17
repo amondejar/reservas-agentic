@@ -52,7 +52,7 @@ else
             <li>
                 <div class="recurso">
                     <strong>@fila.Recurso.Nombre</strong>
-                    <span class="meta">@Tipo(fila.Recurso.Tipo) · @Plazas(fila.Recurso.Capacidad)@(fila.Recurso.Ubicacion is null ? "" : $" · {fila.Recurso.Ubicacion}")</span>
+                    <span class="meta">@Formato.Tipo(fila.Recurso.Tipo) · @Formato.Plazas(fila.Recurso.Capacidad)@(fila.Recurso.Ubicacion is null ? "" : $" · {fila.Recurso.Ubicacion}")</span>
                     <button type="button" class="enlace" @onclick="() => Abrir(fila.Recurso)">Reservar</button>
                 </div>
                 <div class="linea" role="list" aria-label="Reservas de @fila.Recurso.Nombre">
@@ -148,8 +148,4 @@ else
         var ancho = Math.Max((fin - inicio) / (Hasta - Desde) * 100, 2);
         return FormattableString.Invariant($"left:{izquierda:0.##}%;width:{ancho:0.##}%");
     }
-
-    internal static string Tipo(TipoRecurso tipo) => tipo switch { TipoRecurso.Sala => "Sala", TipoRecurso.Puesto => "Puesto", _ => "Vehículo" };
-
-    internal static string Plazas(int n) => n == 1 ? "1 plaza" : $"{n} plazas";
 }

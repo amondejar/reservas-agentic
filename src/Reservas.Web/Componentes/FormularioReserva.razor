@@ -4,7 +4,7 @@
 <div class="velo" @onclick="Cerrar"></div>
 <section class="panel-lateral" role="dialog" aria-modal="true" aria-labelledby="titulo-reserva">
     <h2 id="titulo-reserva">Reservar @Recurso.Nombre</h2>
-    <p class="meta">@Ocupacion.Tipo(Recurso.Tipo) · @Ocupacion.Plazas(Recurso.Capacidad)</p>
+    <p class="meta">@Formato.Tipo(Recurso.Tipo) · @Formato.Plazas(Recurso.Capacidad)</p>
 
     <form @onsubmit="Reservar">
         <label for="dia">Día</label>

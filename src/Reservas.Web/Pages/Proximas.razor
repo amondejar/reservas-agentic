@@ -42,7 +42,7 @@ else
                 </div>
                 <div class="que">
                     <strong>@reserva.Asunto</strong>
-                    <span class="meta">@reserva.Recurso · @reserva.Titular · @(reserva.Asistentes == 1 ? "1 persona" : $"{reserva.Asistentes} personas")</span>
+                    <span class="meta">@reserva.Recurso · @reserva.Titular · @Formato.Personas(reserva.Asistentes)</span>
                     @if (reserva.Estado == EstadoReserva.Cancelada)
                     {
                         <span class="meta">Cancelada: @reserva.MotivoCancelacion</span>

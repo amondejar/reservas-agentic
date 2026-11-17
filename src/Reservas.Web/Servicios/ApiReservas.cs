@@ -77,3 +77,18 @@ public static class Horas
 
     public static DateOnly Hoy(TimeZoneInfo zona) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zona).DateTime);
 }
+
+/// <summary>Textos que se repiten en las páginas.</summary>
+public static class Formato
+{
+    public static string Tipo(TipoRecurso tipo) => tipo switch
+    {
+        TipoRecurso.Sala => "Sala",
+        TipoRecurso.Puesto => "Puesto",
+        _ => "Vehículo",
+    };
+
+    public static string Plazas(int n) => n == 1 ? "1 plaza" : $"{n} plazas";
+
+    public static string Personas(int n) => n == 1 ? "1 persona" : $"{n} personas";
+}
