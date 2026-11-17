@@ -29,12 +29,15 @@ jobs:
       - name: Trazabilidad de requisitos
         run: dotnet spectrace report
 
-      # La aplicación en marcha (datos en memoria), usada como la usaría un agente de IA.
+      # La aplicación en marcha (datos en memoria), usada como la usaría un agente de IA. En Development, porque el front
+      # se sirve desde la salida del build (static web assets); la imagen Docker prueba la versión publicada.
       - name: Agente de extremo a extremo
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
         run: |
           dotnet src/Reservas.Api/bin/Release/net10.0/Reservas.Api.dll --urls http://localhost:5090 > server.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://localhost:5090/health > /dev/null && break; sleep 1; done
-          curl -sf http://localhost:5090/ | grep -q "blazor.webassembly.js"
+          curl -sf http://localhost:5090/ | grep -q "blazor.webassembly.js" || { echo "El front no se sirve"; cat server.log; exit 1; }
           node tests/e2e/agente.mjs http://localhost:5090 || { cat server.log; exit 1; }
 
   docker:
