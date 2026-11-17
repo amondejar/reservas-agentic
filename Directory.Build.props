@@ -14,8 +14,8 @@
     <SpecTraceVersion>0.10.2-preview.1</SpecTraceVersion>
     <SkillLockVersion>0.1.0-preview.1</SkillLockVersion>
     <TacticaVersion>0.2.0-preview.1</TacticaVersion>
-    <AspNetVersion>10.0.10</AspNetVersion>
-    <EfCoreVersion>10.0.10</EfCoreVersion>
+    <AspNetVersion>10.0.15</AspNetVersion>
+    <EfCoreVersion>10.0.15</EfCoreVersion>
     <NpgsqlEfVersion>10.0.0</NpgsqlEfVersion>
   </PropertyGroup>
 
