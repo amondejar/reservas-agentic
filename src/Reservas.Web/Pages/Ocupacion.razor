@@ -64,7 +64,8 @@ else
                     {
                         <span class="bloque" role="listitem" style="@Posicion(reserva)"
                               title="@($"{reserva.Inicio:HH:mm}–{reserva.Fin:HH:mm} · {reserva.Asunto} · {reserva.Titular}")">
-                            <span class="hora">@reserva.Inicio.ToString("HH:mm")–@reserva.Fin.ToString("HH:mm")</span>
+                            @* Las reservas cortas no caben enteras: la hora de inicio, y el resto en el título. *@
+                            <span class="hora">@(reserva.Fin - reserva.Inicio > TimeSpan.FromMinutes(90) ? $"{reserva.Inicio:HH:mm}–{reserva.Fin:HH:mm}" : reserva.Inicio.ToString("HH:mm"))</span>
                             <span class="texto">@reserva.Asunto</span>
                         </span>
                     }

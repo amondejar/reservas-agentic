@@ -171,6 +171,12 @@ button.enlace { border: none; background: none; padding: 0; color: var(--primari
 @media (max-width: 760px) {
     .escala { display: none; }
     .ocupacion > li { grid-template-columns: 1fr; }
+    /* En el móvil no cabe la línea de tiempo: las reservas, una debajo de otra. */
+    .linea { height: auto; background: none; display: flex; flex-direction: column; gap: 6px; }
+    .libre { position: static; }
+    .bloque { position: static; width: auto !important; white-space: normal; }
+    .bloque .hora, .bloque .texto { display: inline; }
+    .bloque .hora::after { content: " · "; font-weight: normal; }
     .tarjeta { grid-template-columns: 1fr; }
     main { padding: 16px; }
 }
