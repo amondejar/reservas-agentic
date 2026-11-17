@@ -1,0 +1,116 @@
+@page "/reservas"
+@inject ApiReservas Api
+@inject Preferencias Preferencias
+
+<PageTitle>Reservas · Reservas</PageTitle>
+
+<div class="titulo">
+    <h1 tabindex="-1">Próximas reservas</h1>
+    <form class="controles" @onsubmit="Cargar">
+        <label class="oculto" for="buscar">Titular</label>
+        <input id="buscar" type="search" placeholder="Filtrar por titular" @bind="_titular" />
+        <button type="submit">Buscar</button>
+    </form>
+</div>
+
+@if (_aviso is not null)
+{
+    <p class="aviso exito" role="status">@_aviso</p>
+}
+@if (_error is not null)
+{
+    <p class="aviso error" role="alert">@_error</p>
+}
+
+@if (_reservas is null)
+{
+    <p class="cargando">Cargando…</p>
+}
+else if (_reservas.Count == 0)
+{
+    <p>No hay reservas próximas@(string.IsNullOrWhiteSpace(_titular) ? "" : $" de «{_titular}»").</p>
+}
+else
+{
+    <ul class="tarjetas">
+        @foreach (var reserva in _reservas)
+        {
+            <li class="tarjeta @(reserva.Estado == EstadoReserva.Cancelada ? "cancelada" : null)">
+                <div class="cuando">
+                    <span class="dia">@reserva.Inicio.ToString("ddd d MMM", Es)</span>
+                    <span class="hora">@reserva.Inicio.ToString("HH:mm")–@reserva.Fin.ToString("HH:mm")</span>
+                </div>
+                <div class="que">
+                    <strong>@reserva.Asunto</strong>
+                    <span class="meta">@reserva.Recurso · @reserva.Titular · @(reserva.Asistentes == 1 ? "1 persona" : $"{reserva.Asistentes} personas")</span>
+                    @if (reserva.Estado == EstadoReserva.Cancelada)
+                    {
+                        <span class="meta">Cancelada: @reserva.MotivoCancelacion</span>
+                    }
+                </div>
+                <div class="acciones">
+                    @if (reserva.Estado == EstadoReserva.Cancelada)
+                    {
+                        <span class="etiqueta">Cancelada</span>
+                    }
+                    else if (_abierta != reserva.Id)
+                    {
+                        <button type="button" @onclick="() => Abrir(reserva.Id)">Cancelar</button>
+                    }
+                </div>
+                @if (_abierta == reserva.Id)
+                {
+                    <form class="confirmar" @onsubmit="() => Cancelar(reserva)">
+                        <label for="motivo">¿Por qué la cancelas?</label>
+                        <input id="motivo" required minlength="3" maxlength="300" @bind="_motivo" />
+                        <button type="submit" class="peligro">Cancelar la reserva</button>
+                        <button type="button" @onclick="() => Abrir(null)">Volver</button>
+                    </form>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private static readonly CultureInfo Es = CultureInfo.GetCultureInfo("es-ES");
+    private IReadOnlyList<ReservaDto>? _reservas;
+    private string? _titular, _motivo, _error, _aviso;
+    private Guid? _abierta;
+
+    protected override Task OnInitializedAsync()
+    {
+        _titular = Preferencias.Titular;
+        return Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        try
+        {
+            _error = null;
+            _reservas = await Api.ReservasAsync(_titular);
+        }
+        catch (Exception e)
+        {
+            _error = "No se pudieron cargar las reservas: " + e.Message;
+        }
+    }
+
+    private void Abrir(Guid? id) { _abierta = id; _motivo = null; _error = null; _aviso = null; }
+
+    private async Task Cancelar(ReservaDto reserva)
+    {
+        try
+        {
+            var cancelada = await Api.CancelarAsync(reserva.Id, _motivo ?? "");
+            _abierta = null;
+            _aviso = $"Cancelada: {cancelada.Asunto} ({cancelada.Recurso}).";
+            await Cargar();
+        }
+        catch (ErrorApi e)
+        {
+            _error = e.Message;
+        }
+    }
+}

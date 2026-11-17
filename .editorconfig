@@ -1,0 +1,28 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,props,targets,csproj,slnx}]
+indent_size = 2
+
+[*.cs]
+# Tactica: el modelo de dominio sigue los patrones tácticos de DDD. Son errores: el build (y el agente que lo
+# compila) no termina mientras no se cumplan. El mensaje de cada uno dice qué escribir en su lugar.
+dotnet_diagnostic.TAC001.severity = error
+dotnet_diagnostic.TAC002.severity = error
+dotnet_diagnostic.TAC003.severity = error
+dotnet_diagnostic.TAC005.severity = error
+dotnet_diagnostic.TAC010.severity = error
+dotnet_diagnostic.TAC011.severity = error
+dotnet_diagnostic.TAC012.severity = error
+dotnet_diagnostic.TAC013.severity = error
+dotnet_diagnostic.TAC020.severity = error
+dotnet_diagnostic.TAC021.severity = error
+dotnet_diagnostic.TAC030.severity = error
+dotnet_diagnostic.TAC031.severity = error

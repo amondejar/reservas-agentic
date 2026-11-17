@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- El modelo de dominio: agregados, value objects y eventos. Sin dependencias de infraestructura. -->
+  <ItemGroup>
+    <!-- Patrones tácticos de DDD comprobados en cada build (ver .editorconfig). -->
+    <PackageReference Include="Tactica" Version="$(TacticaVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

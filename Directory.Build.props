@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- Los paquetes agénticos, en un solo sitio. -->
+  <PropertyGroup>
+    <KeelVersion>1.0.0-rc.8</KeelVersion>
+    <McpRazorVersion>0.1.0-preview.2</McpRazorVersion>
+    <SpecTraceVersion>0.10.2-preview.1</SpecTraceVersion>
+    <SkillLockVersion>0.1.0-preview.1</SkillLockVersion>
+    <TacticaVersion>0.2.0-preview.1</TacticaVersion>
+    <AspNetVersion>10.0.10</AspNetVersion>
+    <EfCoreVersion>10.0.10</EfCoreVersion>
+    <NpgsqlEfVersion>10.0.0</NpgsqlEfVersion>
+  </PropertyGroup>
+
+  <!--
+    ReservasOffline=true: compila sin la base de datos (EF Core, Npgsql) ni el front (Blazor WebAssembly), solo con
+    los datos en memoria. Para entornos sin acceso a nuget.org; la aplicación normal no lo usa.
+  -->
+  <PropertyGroup Condition="'$(ReservasOffline)' != 'true'">
+    <DefineConstants>$(DefineConstants);POSTGRES;WEB</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Comprueba las skills de agente (SKILL.md) que traen los paquetes, en cada build: inyección de prompts, texto
+      oculto, ejecución remota. Revísalas con "dotnet skilllock scan" y fíjalas con "dotnet skilllock lock".
+    -->
+    <PackageReference Include="SkillLock" Version="$(SkillLockVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "reservas": {
+      "type": "http",
+      "url": "http://localhost:5090/mcp"
+    }
+  }
+}

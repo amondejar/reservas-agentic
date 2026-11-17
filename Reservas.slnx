@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Reservas.Domain/Reservas.Domain.csproj" />
+    <Project Path="src/Reservas.Contracts/Reservas.Contracts.csproj" />
+    <Project Path="src/Reservas.Infrastructure/Reservas.Infrastructure.csproj" />
+    <Project Path="src/Reservas.Api/Reservas.Api.csproj" />
+    <Project Path="src/Reservas.Web/Reservas.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Reservas.Tests/Reservas.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,176 @@
+:root {
+    --fondo: #f6f7fb;
+    --superficie: #ffffff;
+    --texto: #18202f;
+    --texto-suave: #556070;
+    --borde: #dfe3ea;
+    --primario: #1d4ed8;
+    --primario-texto: #ffffff;
+    --bloque: #dbe6ff;
+    --bloque-texto: #183a99;
+    --exito-fondo: #e7f6ec;
+    --exito-texto: #136b33;
+    --error-fondo: #fdecec;
+    --error-texto: #a1191f;
+    --libre: #136b33;
+    --radio: 10px;
+    --foco: 0 0 0 3px rgba(29, 78, 216, 0.45);
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --fondo: #0f141c;
+        --superficie: #171e29;
+        --texto: #e7ebf2;
+        --texto-suave: #a3adbd;
+        --borde: #2a3342;
+        --primario: #6b95ff;
+        --primario-texto: #0b1220;
+        --bloque: #22345c;
+        --bloque-texto: #cddbff;
+        --exito-fondo: #12301e;
+        --exito-texto: #8be0a9;
+        --error-fondo: #3a1517;
+        --error-texto: #ffb3b5;
+        --libre: #8be0a9;
+        --foco: 0 0 0 3px rgba(107, 149, 255, 0.55);
+        color-scheme: dark;
+    }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+a { color: var(--primario); }
+
+:focus-visible { outline: none; box-shadow: var(--foco); border-radius: 6px; }
+
+.oculto {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.saltar { position: absolute; left: -999px; top: 8px; background: var(--superficie); padding: 8px 12px; z-index: 10; }
+.saltar:focus { left: 8px; }
+
+.cabecera {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 14px 24px; background: var(--superficie); border-bottom: 1px solid var(--borde);
+}
+.marca { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.logo {
+    display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+    background: var(--primario); color: var(--primario-texto); font-size: 18px;
+}
+nav { display: flex; gap: 4px; }
+nav a {
+    padding: 8px 14px; border-radius: 8px; text-decoration: none; color: var(--texto-suave); font-weight: 500;
+}
+nav a:hover { background: var(--fondo); color: var(--texto); }
+nav a.active { background: var(--bloque); color: var(--bloque-texto); }
+
+main { max-width: 1120px; margin: 0 auto; padding: 24px; outline: none; }
+.pie { max-width: 1120px; margin: 0 auto; padding: 8px 24px 32px; color: var(--texto-suave); font-size: 14px; }
+
+h1 { font-size: 24px; margin: 0; }
+h1::first-letter { text-transform: uppercase; }
+h2 { font-size: 19px; margin: 0 0 4px; }
+
+.titulo { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.controles { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+button, input, select, textarea {
+    font: inherit; color: inherit; background: var(--superficie);
+    border: 1px solid var(--borde); border-radius: 8px; padding: 8px 12px;
+}
+button { cursor: pointer; font-weight: 500; }
+button:hover { border-color: var(--texto-suave); }
+button:disabled { opacity: 0.6; cursor: default; }
+button.primario { background: var(--primario); border-color: var(--primario); color: var(--primario-texto); }
+button.peligro { background: var(--error-texto); border-color: var(--error-texto); color: #fff; }
+button.enlace { border: none; background: none; padding: 0; color: var(--primario); text-decoration: underline; }
+
+.meta { color: var(--texto-suave); font-size: 14px; }
+.cargando { color: var(--texto-suave); }
+
+.aviso { padding: 10px 14px; border-radius: var(--radio); margin: 0 0 16px; }
+.aviso.exito { background: var(--exito-fondo); color: var(--exito-texto); }
+.aviso.error { background: var(--error-fondo); color: var(--error-texto); }
+
+/* Ocupación: una línea de tiempo por recurso, de 7:00 a 21:00. */
+.escala, .ocupacion > li { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: center; }
+.escala { margin-bottom: 4px; }
+.horas { display: grid; grid-template-columns: repeat(14, 1fr); color: var(--texto-suave); font-size: 12px; }
+.ocupacion { list-style: none; margin: 0; padding: 0; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); }
+.ocupacion > li { padding: 14px 16px; border-bottom: 1px solid var(--borde); }
+.ocupacion > li:last-child { border-bottom: none; }
+.recurso { display: flex; flex-direction: column; gap: 2px; }
+.recurso .enlace { align-self: flex-start; margin-top: 4px; }
+.linea {
+    position: relative; height: 46px; border-radius: 8px;
+    background: repeating-linear-gradient(to right, transparent 0, transparent calc(100% / 14 - 1px), var(--borde) calc(100% / 14 - 1px), var(--borde) calc(100% / 14));
+}
+.libre { position: absolute; left: 10px; top: 12px; color: var(--libre); font-size: 14px; }
+.bloque {
+    position: absolute; top: 4px; bottom: 4px; overflow: hidden; padding: 3px 8px;
+    background: var(--bloque); color: var(--bloque-texto); border-radius: 6px; border-left: 3px solid var(--primario);
+    font-size: 12px; line-height: 1.3; white-space: nowrap;
+}
+.bloque .hora { display: block; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bloque .texto { display: block; overflow: hidden; text-overflow: ellipsis; }
+
+/* Panel lateral para reservar. */
+.velo { position: fixed; inset: 0; background: rgba(10, 15, 25, 0.35); }
+.panel-lateral {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); overflow: auto;
+    background: var(--superficie); padding: 24px; box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
+}
+.panel-lateral form { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.panel-lateral label { font-weight: 500; font-size: 14px; margin-top: 8px; }
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dos input { width: 100%; }
+.botones { display: flex; gap: 8px; margin-top: 16px; }
+.panel-lateral .aviso { margin: 12px 0 0; }
+
+/* Reservas. */
+.tarjetas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tarjeta {
+    display: grid; grid-template-columns: 130px 1fr auto; gap: 16px; align-items: center;
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px 16px;
+}
+.tarjeta.cancelada { opacity: 0.75; }
+.tarjeta.cancelada strong { text-decoration: line-through; }
+.cuando { display: flex; flex-direction: column; }
+.cuando .dia { font-weight: 600; text-transform: capitalize; }
+.cuando .hora { color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.que { display: flex; flex-direction: column; gap: 2px; }
+.etiqueta { background: var(--error-fondo); color: var(--error-texto); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+.confirmar { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.confirmar input { flex: 1; min-width: 220px; }
+
+/* Recursos. */
+.tabla { width: 100%; border-collapse: collapse; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; }
+.tabla th, .tabla td { padding: 12px 14px; border-bottom: 1px solid var(--borde); text-align: left; }
+.tabla th { font-size: 13px; color: var(--texto-suave); font-weight: 600; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla .acciones { text-align: right; white-space: nowrap; }
+.tabla .acciones > * { margin-left: 6px; }
+
+.arranque { max-width: 480px; margin: 18vh auto; text-align: center; color: var(--texto-suave); }
+#blazor-error-ui { display: none; position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 24px; background: var(--error-fondo); color: var(--error-texto); }
+
+@media (max-width: 760px) {
+    .escala { display: none; }
+    .ocupacion > li { grid-template-columns: 1fr; }
+    .tarjeta { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+}

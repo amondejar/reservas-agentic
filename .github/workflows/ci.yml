@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: dotnet tool restore
+      - run: dotnet restore
+      # Sin avisos: SpecTrace (requisitos sin código o sin test) y SkillLock fallan el build; Tactica ya da errores.
+      - run: dotnet build -c Release --no-restore -warnaserror
+      - run: dotnet test -c Release --no-build
+
+      - name: Trazabilidad de requisitos
+        run: dotnet spectrace report
+
+      # La aplicación en marcha (datos en memoria), usada como la usaría un agente de IA.
+      - name: Agente de extremo a extremo
+        run: |
+          dotnet src/Reservas.Api/bin/Release/net10.0/Reservas.Api.dll --urls http://localhost:5090 > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:5090/health > /dev/null && break; sleep 1; done
+          curl -sf http://localhost:5090/ | grep -q "blazor.webassembly.js"
+          node tests/e2e/agente.mjs http://localhost:5090 || { cat server.log; exit 1; }
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: La imagen que despliega Render
+        run: docker build -t reservas .
+      - name: Arranca y responde
+        run: |
+          docker run -d -p 8080:8080 --name reservas reservas
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/health > /dev/null && break; sleep 1; done
+          curl -sf http://localhost:8080/api/recursos | grep -q "Sala"
+          curl -sf http://localhost:8080/ | grep -q "blazor.webassembly.js"
+          curl -sf "http://localhost:8080/api/ocupacion" | grep -q "Europe/Madrid"
+          docker logs reservas | tail -20

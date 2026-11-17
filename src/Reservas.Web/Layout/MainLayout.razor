@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<header class="cabecera">
+    <div class="marca">
+        <span class="logo" aria-hidden="true">▦</span>
+        <span>Reservas</span>
+    </div>
+    <nav aria-label="Principal">
+        <NavLink href="" Match="NavLinkMatch.All">Ocupación</NavLink>
+        <NavLink href="reservas">Reservas</NavLink>
+        <NavLink href="recursos">Recursos</NavLink>
+    </nav>
+</header>
+<main id="contenido" tabindex="-1">
+    @Body
+</main>
+<footer class="pie">
+    Demo de <a href="https://github.com/amondejar/reservas-agentic">reservas-agentic</a>: la misma aplicación
+    que usan los agentes por MCP en <code>/mcp</code>.
+</footer>

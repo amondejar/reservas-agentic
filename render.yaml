@@ -1,0 +1,16 @@
+# Render Blueprint: New → Blueprint → este repositorio. Crea el servicio web desde el Dockerfile.
+# La cadena de conexión de Neon se pone a mano en el panel de Render (sync: false): nunca en el repositorio.
+services:
+  - type: web
+    name: reservas-agentic
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ConnectionStrings__Reservas
+        sync: false
+      - key: Reservas__ZonaHoraria
+        value: Europe/Madrid

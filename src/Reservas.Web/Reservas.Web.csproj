@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- El front: Blazor WebAssembly. Lo sirve Reservas.Api desde la misma URL que la API. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(AspNetVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reservas.Contracts\Reservas.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

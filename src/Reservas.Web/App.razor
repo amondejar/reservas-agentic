@@ -1,0 +1,13 @@
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>No encontrado · Reservas</PageTitle>
+        <LayoutView Layout="typeof(MainLayout)">
+            <h1>Página no encontrada</h1>
+            <p><a href="">Volver a la ocupación de hoy</a></p>
+        </LayoutView>
+    </NotFound>
+</Router>

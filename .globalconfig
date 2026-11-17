@@ -1,0 +1,9 @@
+# Severidades de SpecTrace (trazabilidad). Un .globalconfig también se aplica a los diagnósticos de los ficheros
+# .spec.md, que no son C#.
+is_global = true
+
+# Requisito aprobado sin código o sin tests.
+dotnet_diagnostic.ST0003.severity = warning
+dotnet_diagnostic.ST0004.severity = warning
+# Criterio de aceptación sin test.
+dotnet_diagnostic.ST0005.severity = warning

@@ -1,0 +1,85 @@
+@page "/recursos"
+@inject ApiReservas Api
+
+<PageTitle>Recursos · Reservas</PageTitle>
+
+<div class="titulo">
+    <h1 tabindex="-1">Recursos</h1>
+</div>
+
+@if (_aviso is not null)
+{
+    <p class="aviso exito" role="status">@_aviso</p>
+}
+@if (_error is not null)
+{
+    <p class="aviso error" role="alert">@_error</p>
+}
+
+@if (_recursos is null)
+{
+    <p class="cargando">Cargando…</p>
+}
+else
+{
+    <table class="tabla">
+        <thead>
+            <tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col" class="num">Plazas</th><th scope="col">Ubicación</th><th scope="col"><span class="oculto">Acciones</span></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var recurso in _recursos)
+            {
+                <tr>
+                    <td><strong>@recurso.Nombre</strong></td>
+                    <td>@Ocupacion.Tipo(recurso.Tipo)</td>
+                    <td class="num">@recurso.Capacidad</td>
+                    <td>@recurso.Ubicacion</td>
+                    <td class="acciones">
+                        @if (_confirmar == recurso.Id)
+                        {
+                            <span>¿Seguro?</span>
+                            <button type="button" class="peligro" @onclick="() => DarDeBaja(recurso)">Dar de baja</button>
+                            <button type="button" @onclick="() => _confirmar = null">No</button>
+                        }
+                        else
+                        {
+                            <button type="button" @onclick="() => Confirmar(recurso.Id)">Dar de baja</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="meta">Los recursos dados de baja dejan de listarse y de poder reservarse. Si tienen reservas futuras, cancélalas antes.</p>
+}
+
+@code {
+    private IReadOnlyList<RecursoDto>? _recursos;
+    private Guid? _confirmar;
+    private string? _error, _aviso;
+
+    protected override Task OnInitializedAsync() => Cargar();
+
+    private async Task Cargar()
+    {
+        try { _recursos = await Api.RecursosAsync(); }
+        catch (Exception e) { _error = "No se pudieron cargar los recursos: " + e.Message; }
+    }
+
+    private void Confirmar(Guid id) { _confirmar = id; _error = null; _aviso = null; }
+
+    private async Task DarDeBaja(RecursoDto recurso)
+    {
+        _confirmar = null;
+        try
+        {
+            await Api.DarDeBajaAsync(recurso.Id);
+            _aviso = $"{recurso.Nombre} dado de baja.";
+            await Cargar();
+        }
+        catch (ErrorApi e)
+        {
+            _error = e.Message;
+        }
+    }
+}

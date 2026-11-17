@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- ASP0029: [ValidatableType] es experimental en .NET 10. MCPEXP003: las MCP Apps son experimentales en el SDK de MCP. -->
+    <NoWarn>$(NoWarn);ASP0029;MCPEXP003</NoWarn>
+    <!-- El panel de McpRazor se ejecuta en el servidor: no necesita los scripts de Blazor Server. -->
+    <RequiresAspNetWebAssets>false</RequiresAspNetWebAssets>
+    <UserSecretsId>reservas-agentic</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reservas.Domain\Reservas.Domain.csproj" />
+    <ProjectReference Include="..\Reservas.Contracts\Reservas.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Un endpoint por clase, ofrecido a los agentes como herramienta MCP; las destructivas piden confirmación. -->
+    <PackageReference Include="Keel.Endpoints" Version="$(KeelVersion)" />
+    <PackageReference Include="Keel.Endpoints.Mcp" Version="$(KeelVersion)" />
+    <PackageReference Include="Keel.Endpoints.Agents" Version="$(KeelVersion)" />
+    <!-- Paneles interactivos dentro de Claude y Copilot, escritos como componentes Razor. -->
+    <PackageReference Include="McpRazor" Version="$(McpRazorVersion)" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.3.1" />
+    <!-- Los requisitos de specs/*.spec.md, enlazados con el código que los implementa. -->
+    <PackageReference Include="SpecTrace" Version="$(SpecTraceVersion)" />
+  </ItemGroup>
+
+  <!-- La base de datos (Postgres) y el front (Blazor WebAssembly), salvo en compilaciones sin conexión. -->
+  <ItemGroup Condition="'$(ReservasOffline)' != 'true'">
+    <ProjectReference Include="..\Reservas.Infrastructure\Reservas.Infrastructure.csproj" />
+    <ProjectReference Include="..\Reservas.Web\Reservas.Web.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(AspNetVersion)" />
+  </ItemGroup>
+
+</Project>

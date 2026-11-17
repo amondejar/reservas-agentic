@@ -1,0 +1,155 @@
+@page "/"
+@inject ApiReservas Api
+
+<PageTitle>Ocupación · Reservas</PageTitle>
+
+<div class="titulo">
+    <h1 tabindex="-1">Ocupación del @_fecha.ToString("dddd d 'de' MMMM", Es)</h1>
+    <div class="controles">
+        <button type="button" @onclick="() => Ir(-1)" aria-label="Día anterior">‹</button>
+        <button type="button" @onclick="Hoy">Hoy</button>
+        <button type="button" @onclick="() => Ir(1)" aria-label="Día siguiente">›</button>
+        <label class="oculto" for="fecha">Fecha</label>
+        <input id="fecha" type="date" value="@_fecha.ToString("yyyy-MM-dd")" @onchange="CambiarFecha" />
+        <label class="oculto" for="tipo">Tipo de recurso</label>
+        <select id="tipo" @onchange="CambiarTipo">
+            <option value="">Todos los recursos</option>
+            <option value="Sala">Salas</option>
+            <option value="Puesto">Puestos</option>
+            <option value="Vehiculo">Vehículos</option>
+        </select>
+    </div>
+</div>
+
+@if (_aviso is not null)
+{
+    <p class="aviso exito" role="status">@_aviso</p>
+}
+@if (_error is not null)
+{
+    <p class="aviso error" role="alert">@_error</p>
+}
+
+@if (_ocupacion is null)
+{
+    <p class="cargando">Cargando…</p>
+}
+else
+{
+    <div class="escala" aria-hidden="true">
+        <span></span>
+        <div class="horas">
+            @for (var h = Desde; h < Hasta; h++)
+            {
+                <span>@h:00</span>
+            }
+        </div>
+    </div>
+
+    <ul class="ocupacion">
+        @foreach (var fila in _ocupacion.Recursos)
+        {
+            <li>
+                <div class="recurso">
+                    <strong>@fila.Recurso.Nombre</strong>
+                    <span class="meta">@Tipo(fila.Recurso.Tipo) · @Plazas(fila.Recurso.Capacidad)@(fila.Recurso.Ubicacion is null ? "" : $" · {fila.Recurso.Ubicacion}")</span>
+                    <button type="button" class="enlace" @onclick="() => Abrir(fila.Recurso)">Reservar</button>
+                </div>
+                <div class="linea" role="list" aria-label="Reservas de @fila.Recurso.Nombre">
+                    @if (fila.Reservas.Count == 0)
+                    {
+                        <span class="libre" role="listitem">Libre todo el día</span>
+                    }
+                    @foreach (var reserva in fila.Reservas)
+                    {
+                        <span class="bloque" role="listitem" style="@Posicion(reserva)"
+                              title="@($"{reserva.Inicio:HH:mm}–{reserva.Fin:HH:mm} · {reserva.Asunto} · {reserva.Titular}")">
+                            <span class="hora">@reserva.Inicio.ToString("HH:mm")–@reserva.Fin.ToString("HH:mm")</span>
+                            <span class="texto">@reserva.Asunto</span>
+                        </span>
+                    }
+                </div>
+            </li>
+        }
+    </ul>
+
+    @if (_ocupacion.Recursos.Count == 0)
+    {
+        <p>No hay recursos de este tipo.</p>
+    }
+}
+
+@if (_formulario is not null && _zona is not null)
+{
+    <FormularioReserva Recurso="_formulario" Fecha="_fecha" Zona="_zona" OnCerrar="Cerrar" OnReservada="Reservada" />
+}
+
+@code {
+    private const int Desde = 7, Hasta = 21;
+    private static readonly CultureInfo Es = CultureInfo.GetCultureInfo("es-ES");
+
+    private DateOnly _fecha = DateOnly.FromDateTime(DateTime.Now);
+    private TipoRecurso? _tipo;
+    private OcupacionDto? _ocupacion;
+    private TimeZoneInfo? _zona;
+    private RecursoDto? _formulario;
+    private string? _error, _aviso;
+
+    protected override Task OnInitializedAsync() => Cargar();
+
+    private async Task Cargar()
+    {
+        try
+        {
+            _error = null;
+            _ocupacion = await Api.OcupacionAsync(_fecha, _tipo);
+            _zona ??= Horas.Zona(_ocupacion.ZonaHoraria);
+        }
+        catch (Exception e)
+        {
+            _error = "No se pudo cargar la ocupación: " + e.Message;
+        }
+    }
+
+    private Task Ir(int dias) { _fecha = _fecha.AddDays(dias); _aviso = null; return Cargar(); }
+
+    private Task Hoy() { _fecha = _zona is null ? DateOnly.FromDateTime(DateTime.Now) : Horas.Hoy(_zona); _aviso = null; return Cargar(); }
+
+    private Task CambiarFecha(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out var fecha)) _fecha = fecha;
+        return Cargar();
+    }
+
+    private Task CambiarTipo(ChangeEventArgs e)
+    {
+        _tipo = Enum.TryParse<TipoRecurso>(e.Value?.ToString(), out var tipo) ? tipo : null;
+        return Cargar();
+    }
+
+    private void Abrir(RecursoDto recurso) { _formulario = recurso; _aviso = null; }
+
+    private void Cerrar() => _formulario = null;
+
+    private async Task Reservada(ReservaDto reserva)
+    {
+        _formulario = null;
+        _fecha = DateOnly.FromDateTime(reserva.Inicio.DateTime);
+        _aviso = $"Reservado: {reserva.Recurso}, {reserva.Inicio.ToString("dddd d", Es)} de {reserva.Inicio:HH:mm} a {reserva.Fin:HH:mm}.";
+        await Cargar();
+    }
+
+    private static string Posicion(ReservaDto reserva)
+    {
+        double Horas(DateTimeOffset t) => t.Hour + t.Minute / 60.0;
+        var inicio = Math.Clamp(Horas(reserva.Inicio), Desde, Hasta);
+        var fin = reserva.Fin.Date > reserva.Inicio.Date ? Hasta : Math.Clamp(Horas(reserva.Fin), Desde, Hasta);
+        var izquierda = (inicio - Desde) / (Hasta - Desde) * 100;
+        var ancho = Math.Max((fin - inicio) / (Hasta - Desde) * 100, 2);
+        return FormattableString.Invariant($"left:{izquierda:0.##}%;width:{ancho:0.##}%");
+    }
+
+    internal static string Tipo(TipoRecurso tipo) => tipo switch { TipoRecurso.Sala => "Sala", TipoRecurso.Puesto => "Puesto", _ => "Vehículo" };
+
+    internal static string Plazas(int n) => n == 1 ? "1 plaza" : $"{n} plazas";
+}

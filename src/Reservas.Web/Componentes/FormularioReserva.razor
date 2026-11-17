@@ -1,0 +1,94 @@
+@inject ApiReservas Api
+@inject Preferencias Preferencias
+
+<div class="velo" @onclick="Cerrar"></div>
+<section class="panel-lateral" role="dialog" aria-modal="true" aria-labelledby="titulo-reserva">
+    <h2 id="titulo-reserva">Reservar @Recurso.Nombre</h2>
+    <p class="meta">@Ocupacion.Tipo(Recurso.Tipo) · @Ocupacion.Plazas(Recurso.Capacidad)</p>
+
+    <form @onsubmit="Reservar">
+        <label for="dia">Día</label>
+        <input id="dia" type="date" required @bind="_dia" />
+
+        <div class="dos">
+            <div>
+                <label for="desde">Desde</label>
+                <input id="desde" type="time" step="900" required @bind="_desde" />
+            </div>
+            <div>
+                <label for="hasta">Hasta</label>
+                <input id="hasta" type="time" step="900" required @bind="_hasta" />
+            </div>
+        </div>
+
+        <label for="titular">Tu nombre</label>
+        <input id="titular" required maxlength="100" autocomplete="name" @bind="_titular" />
+
+        <label for="asunto">Asunto</label>
+        <input id="asunto" required maxlength="200" placeholder="Reunión de equipo" @bind="_asunto" />
+
+        <label for="asistentes">Asistentes</label>
+        <input id="asistentes" type="number" min="1" max="@Recurso.Capacidad" required @bind="_asistentes" />
+
+        @if (_error is not null)
+        {
+            <p class="aviso error" role="alert">@_error</p>
+        }
+
+        <div class="botones">
+            <button type="submit" class="primario" disabled="@_enviando">@(_enviando ? "Reservando…" : "Reservar")</button>
+            <button type="button" @onclick="Cerrar">Cancelar</button>
+        </div>
+    </form>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public RecursoDto Recurso { get; set; } = null!;
+    [Parameter, EditorRequired] public DateOnly Fecha { get; set; }
+    [Parameter, EditorRequired] public TimeZoneInfo Zona { get; set; } = null!;
+    [Parameter] public EventCallback OnCerrar { get; set; }
+    [Parameter] public EventCallback<ReservaDto> OnReservada { get; set; }
+
+    private DateOnly _dia;
+    private TimeOnly _desde = new(9, 0), _hasta = new(10, 0);
+    private string? _titular, _asunto, _error;
+    private int _asistentes = 1;
+    private bool _enviando;
+
+    protected override void OnInitialized()
+    {
+        _dia = Fecha;
+        _titular = Preferencias.Titular;
+        // Hoy: la siguiente hora en punto.
+        var hoy = Horas.Hoy(Zona);
+        if (_dia == hoy)
+        {
+            var ahora = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Zona);
+            var siguiente = Math.Min(ahora.Hour + 1, 22);
+            (_desde, _hasta) = (new TimeOnly(siguiente, 0), new TimeOnly(Math.Min(siguiente + 1, 23), 0));
+        }
+    }
+
+    private async Task Reservar()
+    {
+        _error = null;
+        _enviando = true;
+        try
+        {
+            Preferencias.Titular = _titular;
+            var reserva = await Api.ReservarAsync(new NuevaReservaDto(
+                Recurso.Id, Horas.En(Zona, _dia, _desde), Horas.En(Zona, _dia, _hasta), _titular ?? "", _asunto ?? "", _asistentes));
+            await OnReservada.InvokeAsync(reserva);
+        }
+        catch (ErrorApi e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _enviando = false;
+        }
+    }
+
+    private Task Cerrar() => OnCerrar.InvokeAsync();
+}

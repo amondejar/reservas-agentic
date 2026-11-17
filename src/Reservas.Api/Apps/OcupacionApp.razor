@@ -1,0 +1,159 @@
+@*
+    El panel de ocupación. McpRazor renderiza este componente en el servidor y lo muestra dentro del chat (Claude,
+    Copilot y otros clientes MCP Apps). Los clics ejecutan los handlers de abajo, en este proceso.
+
+    Aquí decide la persona, así que cancelar va directo al caso de uso. Cuando decide un agente, llama a la
+    herramienta reservas_cancelar, y Keel pide antes la confirmación de la persona.
+*@
+@attribute [McpApp("ui://reservas/ocupacion", Name = "Ocupación del día", Description = "Las reservas de un día por recurso, con la opción de cancelarlas.")]
+@inherits McpAppComponent<OcupacionDto>
+@inject IServiceScopeFactory Scopes
+
+<div class="ocupacion">
+    <h1>Ocupación del @_fecha.ToString("dddd d 'de' MMMM", _cultura)</h1>
+    <p class="muted">@Resumen()</p>
+
+    @foreach (var fila in _recursos)
+    {
+        <section>
+            <h2>@fila.Recurso.Nombre <span class="muted">· @fila.Recurso.Tipo · @Plazas(fila.Recurso.Capacidad)</span></h2>
+            @if (fila.Reservas.Count == 0)
+            {
+                <p class="libre">Libre todo el día</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var reserva in fila.Reservas)
+                    {
+                        <li class="@(reserva.Estado == EstadoReserva.Cancelada ? "cancelada" : null)">
+                            <span class="hora">@reserva.Inicio.ToString("HH:mm")–@reserva.Fin.ToString("HH:mm")</span>
+                            <span class="asunto"><strong>@reserva.Asunto</strong> <span class="muted">· @reserva.Titular · @Personas(reserva.Asistentes)</span></span>
+                            @if (reserva.Estado == EstadoReserva.Cancelada)
+                            {
+                                <span class="badge">Cancelada</span>
+                            }
+                            else if (_abierta == reserva.Id)
+                            {
+                                <span></span>
+                            }
+                            else
+                            {
+                                <button type="button" @onclick="() => Abrir(reserva.Id)">Cancelar</button>
+                            }
+                        </li>
+                        @if (_abierta == reserva.Id)
+                        {
+                            <li class="detalle">
+                                <label for="motivo">Motivo de la cancelación</label>
+                                <textarea id="motivo" rows="2" @bind="_motivo"></textarea>
+                                @if (_error is not null)
+                                {
+                                    <p class="error" role="alert">@_error</p>
+                                }
+                                <div class="botones">
+                                    <button type="button" class="danger" @onclick="() => Cancelar(reserva)">Cancelar la reserva</button>
+                                    <button type="button" @onclick="() => Abrir(null)">Volver</button>
+                                </div>
+                            </li>
+                        }
+                    }
+                </ul>
+            }
+        </section>
+    }
+
+    @if (_canceladas.Count > 0)
+    {
+        <div class="pie">
+            <span>@_canceladas.Count @(_canceladas.Count == 1 ? "reserva cancelada" : "reservas canceladas") desde el panel.</span>
+            <button type="button" @onclick="PedirResumen">Pedir un resumen al asistente</button>
+        </div>
+    }
+</div>
+
+<style>
+    .ocupacion .muted { color: var(--color-text-secondary); font-size: var(--font-text-sm-size); font-weight: normal; }
+    .ocupacion h1 { text-transform: none; }
+    .ocupacion h2 { font-size: var(--font-text-md-size, 15px); margin: 16px 0 6px; }
+    .ocupacion ul { list-style: none; margin: 0; padding: 0; }
+    .ocupacion li { display: grid; grid-template-columns: 96px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-primary, #e5e5e5); }
+    .ocupacion li.cancelada .asunto, .ocupacion li.cancelada .hora { text-decoration: line-through; color: var(--color-text-secondary); }
+    .ocupacion li.detalle { display: block; background: var(--color-background-secondary); padding: 10px; }
+    .ocupacion .hora { font-variant-numeric: tabular-nums; font-weight: var(--font-weight-medium); }
+    .ocupacion .libre { color: var(--color-text-success); margin: 0; }
+    .ocupacion label { display: block; font-size: var(--font-text-sm-size); color: var(--color-text-secondary); margin-bottom: 4px; }
+    .ocupacion textarea { width: 100%; resize: vertical; }
+    .ocupacion .botones { display: flex; gap: 8px; margin-top: 8px; }
+    .ocupacion .error { color: var(--color-text-danger); margin: 6px 0 0; }
+    .ocupacion .badge { padding: 2px 8px; border-radius: var(--border-radius-full); font-size: 12px; background: var(--color-background-danger); color: var(--color-text-danger); }
+    .ocupacion .pie { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--color-text-secondary); font-size: var(--font-text-sm-size); }
+</style>
+
+@code {
+    private List<OcupacionRecursoDto> _recursos = [];
+    private readonly List<ReservaDto> _canceladas = [];
+    private DateOnly _fecha;
+    private Guid? _abierta;
+    private string? _motivo;
+    private string? _error;
+    private CultureInfo _cultura = CultureInfo.InvariantCulture;
+
+    protected override void OnInitialized()
+    {
+        _recursos = Data?.Recursos?.ToList() ?? [];
+        _fecha = Data?.Fecha ?? DateOnly.FromDateTime(DateTime.Today);
+        _cultura = Host.Culture;
+    }
+
+    private void Abrir(Guid? id)
+    {
+        _abierta = id;
+        _motivo = null;
+        _error = null;
+    }
+
+    private async Task Cancelar(ReservaDto reserva)
+    {
+        try
+        {
+            // El panel vive más que una petición: cada acción usa su propio ámbito de servicios.
+            await using var scope = Scopes.CreateAsyncScope();
+            var cancelada = await scope.ServiceProvider.GetRequiredService<ServicioReservas>().CancelarAsync(reserva.Id, _motivo ?? "");
+            Reemplazar(cancelada);
+            _canceladas.Add(cancelada);
+            Abrir(null);
+
+            // Que el modelo sepa qué ha pasado, para responder a preguntas sobre ello.
+            Host.UpdateModelContext("Panel de ocupación. La persona ha cancelado: " + string.Join("; ", _canceladas.Select(r =>
+                $"{r.Asunto} ({r.Recurso}, {r.Inicio:dd/MM HH:mm}–{r.Fin:HH:mm}), motivo: \"{r.MotivoCancelacion}\"")) + ".");
+        }
+        catch (Exception e) when (e is Domain.Comun.ReglaIncumplidaException or KeyNotFoundException)
+        {
+            _error = e.Message;
+        }
+    }
+
+    private void Reemplazar(ReservaDto cancelada)
+    {
+        for (var i = 0; i < _recursos.Count; i++)
+        {
+            var reservas = _recursos[i].Reservas.Select(r => r.Id == cancelada.Id ? cancelada : r).ToList();
+            _recursos[i] = _recursos[i] with { Reservas = reservas };
+        }
+    }
+
+    private void PedirResumen() =>
+        Host.SendMessage("Resume las reservas que acabo de cancelar en el panel de ocupación y dime si conviene avisar a alguien.");
+
+    private string Resumen()
+    {
+        var confirmadas = _recursos.Sum(r => r.Reservas.Count(x => x.Estado == EstadoReserva.Confirmada));
+        var libres = _recursos.Count(r => r.Reservas.All(x => x.Estado != EstadoReserva.Confirmada));
+        return $"{confirmadas} {(confirmadas == 1 ? "reserva" : "reservas")} · {libres} de {_recursos.Count} recursos libres todo el día";
+    }
+
+    private static string Plazas(int n) => n == 1 ? "1 plaza" : $"{n} plazas";
+
+    private static string Personas(int n) => n == 1 ? "1 persona" : $"{n} personas";
+}

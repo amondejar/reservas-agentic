@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Lo que viaja por HTTP entre la API y el front (Blazor WebAssembly). Solo datos: sin lógica ni dependencias. -->
+
+</Project>
